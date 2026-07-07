@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How's My Driving?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fdf6e3;
+    --ink: #2b2b2b;
+    --accent: #ff6b4a;
+    --accent-dark: #e2502f;
+    --card: #fffdf7;
+    --line: #2b2b2b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(0,0,0,0.03) 1px, transparent 1px),
+      radial-gradient(circle at 80% 60%, rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+    font-family: 'Kalam', cursive;
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  header .car {
+    font-size: 2.8rem;
+    display: inline-block;
+    transform: rotate(-4deg);
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    margin: 0.3rem 0 0.2rem;
+    transform: rotate(-1deg);
+  }
+
+  .subtitle {
+    margin: 0;
+    opacity: 0.75;
+    font-size: 1.05rem;
+  }
+
+  .card {
+    background: var(--card);
+    border: 2.5px solid var(--line);
+    border-radius: 18px 22px 20px 24px / 22px 18px 24px 20px;
+    box-shadow: 5px 5px 0 rgba(43,43,43,0.15);
+    padding: 1.5rem 1.5rem 1.7rem;
+    margin-bottom: 1.6rem;
+  }
+
+  .card h2 {
+    margin-top: 0;
+    font-size: 1.3rem;
+  }
+
+  .stars {
+    display: flex;
+    justify-content: center;
+    gap: 0.3rem;
+    font-size: 2.4rem;
+    margin: 0.6rem 0 1.1rem;
+    user-select: none;
+  }
+
+  .stars span {
+    cursor: pointer;
+    filter: grayscale(1) opacity(0.45);
+    transition: transform 0.1s ease;
+  }
+
+  .stars span:hover {
+    transform: scale(1.15);
+  }
+
+  .stars span.active {
+    filter: none;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 90px;
+    font-family: inherit;
+    font-size: 1.05rem;
+    padding: 0.7rem;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    resize: vertical;
+    background: #fffef9;
+  }
+
+  button.submit {
+    display: block;
+    margin: 1rem auto 0;
+    font-family: inherit;
+    font-size: 1.15rem;
+    padding: 0.6rem 1.6rem;
+    background: var(--accent);
+    color: white;
+    border: 2.5px solid var(--line);
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 rgba(43,43,43,0.25);
+  }
+
+  button.submit:hover { background: var(--accent-dark); }
+  button.submit:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(43,43,43,0.25); }
+  button.submit:disabled { opacity: 0.6; cursor: default; }
+
+  .status {
+    text-align: center;
+    margin-top: 0.7rem;
+    font-size: 1rem;
+    min-height: 1.2rem;
+  }
+
+  .status.error { color: var(--accent-dark); }
+  .status.ok { color: #2f7a3d; }
+
+  .summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .summary .avg {
+    font-size: 2.6rem;
+    font-weight: 700;
+  }
+
+  .summary .count {
+    opacity: 0.7;
+    font-size: 1rem;
+  }
+
+  .summary-stars {
+    text-align: center;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    letter-spacing: 0.1rem;
+  }
+
+  ul.reviews {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  ul.reviews li {
+    border-top: 2px dashed rgba(43,43,43,0.25);
+    padding-top: 0.9rem;
+  }
+
+  ul.reviews li:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .review-stars {
+    font-size: 1.2rem;
+    letter-spacing: 0.05rem;
+  }
+
+  .review-comment {
+    margin: 0.2rem 0 0.15rem;
+    font-size: 1.05rem;
+  }
+
+  .review-date {
+    font-size: 0.85rem;
+    opacity: 0.55;
+  }
+
+  .empty {
+    text-align: center;
+    opacity: 0.6;
+    font-size: 1.05rem;
+  }
+
+  footer {
+    text-align: center;
+    opacity: 0.5;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <span class="car">🚗💨</span>
+      <h1>How's My Driving?</h1>
+      <p class="subtitle">Be honest. I can take it (probably).</p>
+    </header>
+
+    <div class="card">
+      <h2>Leave a rating</h2>
+      <div class="stars" id="starPicker">
+        <span data-value="1">★</span>
+        <span data-value="2">★</span>
+        <span data-value="3">★</span>
+        <span data-value="4">★</span>
+        <span data-value="5">★</span>
+      </div>
+      <textarea id="comment" placeholder="Any comments? (optional) e.g. 'cut me off but had good taste in music'"></textarea>
+      <button class="submit" id="submitBtn">Submit rating</button>
+      <p class="status" id="status"></p>
+    </div>
+
+    <div class="card">
+      <h2>What people are saying</h2>
+      <div id="summary"></div>
+      <ul class="reviews" id="reviews"></ul>
+    </div>
+
+    <footer>made with 🚗 and a little bit of chaos</footer>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  const SUPABASE_URL = "https://nabcgxkbsdbqjgbsziep.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hYmNneGtic2RicWpnYnN6aWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0OTczMTcsImV4cCI6MjA5ODA3MzMxN30.HrFAkKDoxTJqi1_1w5CRaiN8SM2lwUWjxdLjy84corA";
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const TABLE = "driving_ratings";
+
+  let selectedStars = 0;
+  const starEls = [...document.querySelectorAll("#starPicker span")];
+
+  function renderPicker() {
+    starEls.forEach(el => {
+      el.classList.toggle("active", Number(el.dataset.value) <= selectedStars);
+    });
+  }
+
+  starEls.forEach(el => {
+    el.addEventListener("click", () => {
+      selectedStars = Number(el.dataset.value);
+      renderPicker();
+    });
+  });
+
+  function starString(n) {
+    return "★".repeat(n) + "☆".repeat(5 - n);
+  }
+
+  function timeAgo(dateStr) {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+  }
+
+  async function loadReviews() {
+    const { data, error } = await client
+      .from(TABLE)
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const summaryEl = document.getElementById("summary");
+    const listEl = document.getElementById("reviews");
+
+    if (error) {
+      summaryEl.innerHTML = `<p class="empty">Couldn't load ratings right now.</p>`;
+      listEl.innerHTML = "";
+      console.error(error);
+      return;
+    }
+
+    if (!data.length) {
+      summaryEl.innerHTML = `<p class="empty">No ratings yet — be the first!</p>`;
+      listEl.innerHTML = "";
+      return;
+    }
+
+    const avg = data.reduce((sum, r) => sum + r.stars, 0) / data.length;
+    summaryEl.innerHTML = `
+      <div class="summary">
+        <span class="avg">${avg.toFixed(1)}</span>
+        <span class="count">/ 5 from ${data.length} rating${data.length === 1 ? "" : "s"}</span>
+      </div>
+      <div class="summary-stars">${starString(Math.round(avg))}</div>
+    `;
+
+    listEl.innerHTML = data.map(r => `
+      <li>
+        <div class="review-stars">${starString(r.stars)}</div>
+        ${r.comment ? `<p class="review-comment">${escapeHtml(r.comment)}</p>` : ""}
+        <div class="review-date">${timeAgo(r.created_at)}</div>
+      </li>
+    `).join("");
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.getElementById("submitBtn").addEventListener("click", async () => {
+    const statusEl = document.getElementById("status");
+    const btn = document.getElementById("submitBtn");
+
+    if (selectedStars < 1) {
+      statusEl.textContent = "Pick a star rating first!";
+      statusEl.className = "status error";
+      return;
+    }
+
+    btn.disabled = true;
+    statusEl.textContent = "Submitting...";
+    statusEl.className = "status";
+
+    const comment = document.getElementById("comment").value.trim();
+
+    const { error } = await client.from(TABLE).insert({
+      stars: selectedStars,
+      comment: comment || null,
+    });
+
+    btn.disabled = false;
+
+    if (error) {
+      statusEl.textContent = "Something went wrong — try again?";
+      statusEl.className = "status error";
+      console.error(error);
+      return;
+    }
+
+    statusEl.textContent = "Thanks for the feedback!";
+    statusEl.className = "status ok";
+    selectedStars = 0;
+    renderPicker();
+    document.getElementById("comment").value = "";
+    loadReviews();
+  });
+
+  loadReviews();
+</script>
+</body>
+</html>
