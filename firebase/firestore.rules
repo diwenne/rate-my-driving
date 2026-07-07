@@ -1,8 +1,11 @@
 rules_version = '2';
 
 // Backs the "how's my driving" rating page (project rate-my-driving-hmd).
-// Anyone can create a rating and read the list, but nothing can be
-// updated or deleted through the client SDK.
+// Anyone can create a rating and read the list. Delete is open at the
+// rules level — the site gates it behind a client-side password prompt
+// (an obscurity-only guard, not real access control; there's no
+// Firebase Auth wired up, so a technical visitor could bypass it).
+// Nothing can be edited through the client SDK.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /driving_ratings/{ratingId} {
@@ -16,7 +19,8 @@ service cloud.firestore {
         && (request.resource.data.comment == null || request.resource.data.comment is string)
         && request.resource.data.created_at == request.time;
 
-      allow update, delete: if false;
+      allow delete: if true;
+      allow update: if false;
     }
   }
 }

@@ -217,6 +217,24 @@
     font-size: 0.9rem;
     margin-top: 1rem;
   }
+
+  #adminDot {
+    cursor: default;
+    padding: 0.3rem;
+  }
+
+  .review-delete {
+    background: none;
+    border: none;
+    color: var(--accent-dark);
+    opacity: 0.6;
+    cursor: pointer;
+    font-size: 0.9rem;
+    float: right;
+    font-family: inherit;
+  }
+
+  .review-delete:hover { opacity: 1; }
 </style>
 </head>
 <body>
@@ -224,7 +242,7 @@
     <header>
       <span class="car">🚗💨</span>
       <h1>How's My Driving?</h1>
-      <p class="subtitle">Rate my driving and leave a comment.</p>
+      <p class="subtitle">rate my driving and leave a comment. i need my N gang😭🤞</p>
     </header>
 
     <div class="card">
@@ -236,8 +254,8 @@
         <span data-value="4">★</span>
         <span data-value="5">★</span>
       </div>
-      <input type="text" id="name" placeholder="Your name (optional)">
-      <textarea id="comment" placeholder="Any comments? (optional) e.g. 'was driving 20 over the limit'"></textarea>
+      <input type="text" id="name" placeholder="Your name">
+      <textarea id="comment" placeholder="Any comments? e.g. 'was driving 20 over the limit'"></textarea>
       <button class="submit" id="submitBtn">Submit rating</button>
       <p class="status" id="status"></p>
     </div>
@@ -248,13 +266,13 @@
       <ul class="reviews" id="reviews"></ul>
     </div>
 
-    <footer>made while not driving</footer>
+    <footer>made while not driving <span id="adminDot" title="">·</span></footer>
   </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
   import {
-    getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp,
+    getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, deleteDoc,
   } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -269,6 +287,31 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const ratingsCol = collection(db, "driving_ratings");
+
+  const ADMIN_PASSWORD = "55555";
+  let isAdmin = false;
+
+  document.getElementById("adminDot").addEventListener("click", () => {
+    if (isAdmin) return;
+    const entered = prompt("Password:");
+    if (entered === ADMIN_PASSWORD) {
+      isAdmin = true;
+      loadReviews();
+    } else if (entered !== null) {
+      alert("Nope.");
+    }
+  });
+
+  async function deleteRating(id) {
+    if (!confirm("Delete this rating?")) return;
+    try {
+      await deleteDoc(doc(db, "driving_ratings", id));
+      loadReviews();
+    } catch (error) {
+      alert("Couldn't delete it — try again?");
+      console.error(error);
+    }
+  }
 
   let selectedStars = 0;
   const starEls = [...document.querySelectorAll("#starPicker span")];
@@ -312,9 +355,9 @@
     let data;
     try {
       const snapshot = await getDocs(query(ratingsCol, orderBy("created_at", "desc")));
-      data = snapshot.docs.map(doc => {
-        const d = doc.data();
-        return { ...d, created_at: d.created_at ? d.created_at.toDate().toISOString() : new Date().toISOString() };
+      data = snapshot.docs.map(docSnap => {
+        const d = docSnap.data();
+        return { ...d, id: docSnap.id, created_at: d.created_at ? d.created_at.toDate().toISOString() : new Date().toISOString() };
       });
     } catch (error) {
       summaryEl.innerHTML = `<p class="empty">Couldn't load ratings right now.</p>`;
@@ -340,12 +383,18 @@
 
     listEl.innerHTML = data.map(r => `
       <li>
+        ${isAdmin ? `<button class="review-delete" data-id="${r.id}">delete</button>` : ""}
         <div class="review-stars">${starString(r.stars)}${r.name ? ` <span class="review-name">— ${escapeHtml(r.name)}</span>` : ""}</div>
         ${r.comment ? `<p class="review-comment">${escapeHtml(r.comment)}</p>` : ""}
         <div class="review-date">${formatDate(r.created_at)} · ${timeAgo(r.created_at)}</div>
       </li>
     `).join("");
   }
+
+  document.getElementById("reviews").addEventListener("click", e => {
+    const btn = e.target.closest(".review-delete");
+    if (btn) deleteRating(btn.dataset.id);
+  });
 
   function escapeHtml(str) {
     const div = document.createElement("div");
