@@ -247,6 +247,7 @@
   const SUPABASE_URL = "https://nabcgxkbsdbqjgbsziep.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hYmNneGtic2RicWpnYnN6aWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0OTczMTcsImV4cCI6MjA5ODA3MzMxN30.HrFAkKDoxTJqi1_1w5CRaiN8SM2lwUWjxdLjy84corA";
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const db = client.schema("rate_my_driving");
 
   const TABLE = "driving_ratings";
 
@@ -282,7 +283,7 @@
   }
 
   async function loadReviews() {
-    const { data, error } = await client
+    const { data, error } = await db
       .from(TABLE)
       .select("*")
       .order("created_at", { ascending: false });
@@ -343,7 +344,7 @@
 
     const comment = document.getElementById("comment").value.trim();
 
-    const { error } = await client.from(TABLE).insert({
+    const { error } = await db.from(TABLE).insert({
       stars: selectedStars,
       comment: comment || null,
     });
