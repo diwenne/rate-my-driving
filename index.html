@@ -98,16 +98,24 @@
     filter: none;
   }
 
+  input[type="text"],
   textarea {
     width: 100%;
-    min-height: 90px;
     font-family: inherit;
     font-size: 1.05rem;
     padding: 0.7rem;
     border: 2px solid var(--line);
     border-radius: 10px;
-    resize: vertical;
     background: #fffef9;
+  }
+
+  input[type="text"] {
+    margin-bottom: 0.8rem;
+  }
+
+  textarea {
+    min-height: 90px;
+    resize: vertical;
   }
 
   button.submit {
@@ -216,7 +224,7 @@
     <header>
       <span class="car">🚗💨</span>
       <h1>How's My Driving?</h1>
-      <p class="subtitle">Be honest. I can take it (probably).</p>
+      <p class="subtitle">Rate my driving and leave a comment.</p>
     </header>
 
     <div class="card">
@@ -228,7 +236,8 @@
         <span data-value="4">★</span>
         <span data-value="5">★</span>
       </div>
-      <textarea id="comment" placeholder="Any comments? (optional) e.g. 'cut me off but had good taste in music'"></textarea>
+      <input type="text" id="name" placeholder="Your name (optional)">
+      <textarea id="comment" placeholder="Any comments? (optional) e.g. 'was driving 20 over the limit'"></textarea>
       <button class="submit" id="submitBtn">Submit rating</button>
       <p class="status" id="status"></p>
     </div>
@@ -239,7 +248,7 @@
       <ul class="reviews" id="reviews"></ul>
     </div>
 
-    <footer>made with 🚗 and a little bit of chaos</footer>
+    <footer>made while not driving</footer>
   </div>
 
 <script type="module">
@@ -292,6 +301,10 @@
     return `${days}d ago`;
   }
 
+  function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
   async function loadReviews() {
     const summaryEl = document.getElementById("summary");
     const listEl = document.getElementById("reviews");
@@ -327,9 +340,9 @@
 
     listEl.innerHTML = data.map(r => `
       <li>
-        <div class="review-stars">${starString(r.stars)}</div>
+        <div class="review-stars">${starString(r.stars)}${r.name ? ` <span class="review-name">— ${escapeHtml(r.name)}</span>` : ""}</div>
         ${r.comment ? `<p class="review-comment">${escapeHtml(r.comment)}</p>` : ""}
-        <div class="review-date">${timeAgo(r.created_at)}</div>
+        <div class="review-date">${formatDate(r.created_at)} · ${timeAgo(r.created_at)}</div>
       </li>
     `).join("");
   }
@@ -354,10 +367,12 @@
     statusEl.textContent = "Submitting...";
     statusEl.className = "status";
 
+    const name = document.getElementById("name").value.trim();
     const comment = document.getElementById("comment").value.trim();
 
     try {
       await addDoc(ratingsCol, {
+        name: name || null,
         stars: selectedStars,
         comment: comment || null,
         created_at: serverTimestamp(),
@@ -375,6 +390,7 @@
     statusEl.className = "status ok";
     selectedStars = 0;
     renderPicker();
+    document.getElementById("name").value = "";
     document.getElementById("comment").value = "";
     loadReviews();
   });
