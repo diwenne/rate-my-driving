@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Backs the "how's my driving" rating page (project rate-my-driving-hmd).
+// Anyone can create a rating and read the list, but nothing can be
+// updated or deleted through the client SDK.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /driving_ratings/{ratingId} {
+      allow read: if true;
+
+      allow create: if request.resource.data.keys().hasOnly(['stars', 'comment', 'created_at'])
+        && request.resource.data.stars is int
+        && request.resource.data.stars >= 1
+        && request.resource.data.stars <= 5
+        && (request.resource.data.comment == null || request.resource.data.comment is string)
+        && request.resource.data.created_at == request.time;
+
+      allow update, delete: if false;
+    }
+  }
+}

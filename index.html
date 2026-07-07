@@ -242,14 +242,24 @@
     <footer>made with 🚗 and a little bit of chaos</footer>
   </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
-  const SUPABASE_URL = "https://nabcgxkbsdbqjgbsziep.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hYmNneGtic2RicWpnYnN6aWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0OTczMTcsImV4cCI6MjA5ODA3MzMxN30.HrFAkKDoxTJqi1_1w5CRaiN8SM2lwUWjxdLjy84corA";
-  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const db = client.schema("rate_my_driving");
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp,
+  } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
-  const TABLE = "driving_ratings";
+  const firebaseConfig = {
+    projectId: "rate-my-driving-hmd",
+    appId: "1:667817815170:web:f107a166ea3017fa91d89b",
+    storageBucket: "rate-my-driving-hmd.firebasestorage.app",
+    apiKey: "AIzaSyAH7rjTLdlUeS4eqLZCWulnJzJgAXwl8_w",
+    authDomain: "rate-my-driving-hmd.firebaseapp.com",
+    messagingSenderId: "667817815170",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const ratingsCol = collection(db, "driving_ratings");
 
   let selectedStars = 0;
   const starEls = [...document.querySelectorAll("#starPicker span")];
@@ -283,15 +293,17 @@
   }
 
   async function loadReviews() {
-    const { data, error } = await db
-      .from(TABLE)
-      .select("*")
-      .order("created_at", { ascending: false });
-
     const summaryEl = document.getElementById("summary");
     const listEl = document.getElementById("reviews");
 
-    if (error) {
+    let data;
+    try {
+      const snapshot = await getDocs(query(ratingsCol, orderBy("created_at", "desc")));
+      data = snapshot.docs.map(doc => {
+        const d = doc.data();
+        return { ...d, created_at: d.created_at ? d.created_at.toDate().toISOString() : new Date().toISOString() };
+      });
+    } catch (error) {
       summaryEl.innerHTML = `<p class="empty">Couldn't load ratings right now.</p>`;
       listEl.innerHTML = "";
       console.error(error);
@@ -344,20 +356,21 @@
 
     const comment = document.getElementById("comment").value.trim();
 
-    const { error } = await db.from(TABLE).insert({
-      stars: selectedStars,
-      comment: comment || null,
-    });
-
-    btn.disabled = false;
-
-    if (error) {
+    try {
+      await addDoc(ratingsCol, {
+        stars: selectedStars,
+        comment: comment || null,
+        created_at: serverTimestamp(),
+      });
+    } catch (error) {
+      btn.disabled = false;
       statusEl.textContent = "Something went wrong — try again?";
       statusEl.className = "status error";
       console.error(error);
       return;
     }
 
+    btn.disabled = false;
     statusEl.textContent = "Thanks for the feedback!";
     statusEl.className = "status ok";
     selectedStars = 0;

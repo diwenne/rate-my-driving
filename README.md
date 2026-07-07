@@ -4,9 +4,11 @@ A tiny homemade site where people can rate your driving out of 5 stars and leave
 
 ## Setup
 
-1. Open the Supabase SQL editor for the internal project (ref `nabcgxkbsdbqjgbsziep`) and run `supabase/driving_ratings.sql` once. This creates a dedicated `rate_my_driving` schema (kept separate from `public` so it doesn't mix with the other apps in this project) with a `driving_ratings` table and RLS policies that let anyone submit and read ratings, but not edit or delete them.
-2. In the Supabase dashboard, go to **Project Settings → API → Exposed schemas** and add `rate_my_driving` to the list. PostgREST only serves schemas that are explicitly exposed there — without this step the site's requests will fail even though the table exists.
-3. That's it — `index.html` is a fully self-contained static page (uses the public anon key, safe to expose since RLS locks down what it can do).
+Backed by a dedicated Firebase project (`rate-my-driving-hmd`), kept separate from any other apps.
+
+1. Firestore database, security rules (`firebase/firestore.rules`), and the web app config baked into `index.html` are already provisioned. The rules let anyone create a rating and read the list, but not update or delete one.
+2. To change the rules, edit `firebase/firestore.rules` and run `firebase deploy --only firestore:rules` (requires the Firebase CLI logged into an account with access to the project).
+3. `index.html` is a fully self-contained static page — the Firebase config in it is not secret (same trust model as Supabase's anon key); access is enforced entirely by the security rules.
 
 ## Hosting on GitHub Pages
 
